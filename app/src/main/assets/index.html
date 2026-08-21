@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Ganancias Diarias</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- SheetJS para Exportación a Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- html2canvas para Generar Captura de Imagen -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- SDKs de Firebase (Compatibilidad) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+  <!-- Encabezado Visible Solo para Impresión -->
+  <div class="print-only-header">
+    <h1 id="printHeaderTitle">Corte de Ganancias</h1>
+    <div class="print-only-summary">
+      <p><strong>Total del Mes:</strong> <span id="printTotalMonth">$0.00</span></p>
+      <p><strong>Días Laborados:</strong> <span id="printActiveDays">0 días</span></p>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Header de la Aplicación -->
+    <header>
+      <div class="logo-section">
+        <h1>Control de Ganancias</h1>
+        <p>Registro diario (Lunes a Sábado) y cortes mensuales</p>
+      </div>
+
+      <div class="controls-bar">
+        <div class="select-group">
+          <label for="monthSelect">Mes</label>
+          <select id="monthSelect"></select>
+        </div>
+
+        <div class="select-group">
+          <label for="yearSelect">Año</label>
+          <select id="yearSelect"></select>
+        </div>
+
+        <div class="select-group">
+          <label for="weekFilterSelect">Filtrar Semana</label>
+          <select id="weekFilterSelect">
+            <option value="all">Ver Todas las Semanas</option>
+          </select>
+        </div>
+
+        <button id="annualSurveyBtn" class="btn btn-outline" style="border-color: #818cf8; color: #a5b4fc;" title="Ver resumen sondeo acumulado del año">
+          🔍 Sondeo Anual
+        </button>
+
+        <button id="selectFolderBtn" class="btn btn-outline" style="border-color: #34d399; color: #34d399;" title="Elegir una carpeta permanente en tu disco duro donde guardar respaldos sin que se borren">
+          📁 Elegir Carpeta de Respaldo
+        </button>
+
+        <button id="restoreBtn" class="btn btn-outline" style="border-color: #f59e0b; color: #f59e0b;" title="Restaurar o importar datos desde archivo JSON de respaldo">
+          📂 Cargar Respaldo
+        </button>
+        <input type="file" id="restoreFileInput" accept=".json" style="display: none;">
+
+        <button id="closeDayWhatsAppBtn" class="btn btn-whatsapp" title="Cerrar ganancia de hoy y enviar por WhatsApp">
+          <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+          Corte Diario
+        </button>
+
+        <button id="closeWeekWhatsAppBtn" class="btn btn-whatsapp" style="background: #0284c7;" title="Enviar resumen de la semana a WhatsApp">
+          📅 Corte Semanal
+        </button>
+
+        <button id="closeMonthWhatsAppBtn" class="btn btn-whatsapp" style="background: #8b5cf6;" title="Enviar reporte acumulado del mes a WhatsApp">
+          📊 Corte General Mes
+        </button>
+
+        <button id="exportExcelBtn" class="btn btn-success">
+          📊 Exportar Excel (.xlsx)
+        </button>
+
+        <button id="printBtn" class="btn btn-primary">
+          🖨️ Imprimir Mes
+        </button>
+      </div>
+    </header>
+
+    <!-- Tarjetas de Resumen -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-title">Total Neto del Mes</div>
+        <div class="stat-value" id="totalMonth">$0.00</div>
+        <div class="stat-subtext" id="activeDays">0 días registrados</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-title">Total Gastos del Mes</div>
+        <div class="stat-value" id="totalExpenses" style="color: #ef4444;">$0.00</div>
+        <div class="stat-subtext" id="expensesSubtext">Gastos restados</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-title">Predicción Promedio Diario</div>
+        <div class="stat-value" id="avgDaily">$0.00</div>
+        <div class="stat-subtext">Regresión Lineal</div>
+      </div>
+    </div>
+
+    <!-- Contadores de Billetes (Inicio de Día y Fin de Día) -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+      <!-- Inicio de Dia -->
+      <div class="table-card" style="padding: 1.2rem; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(56, 189, 248, 0.3);">
+        <h3 style="font-size: 1.05rem; color: #38bdf8; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem;">
+          ☀️ INICIO DE DÍA (Conteo de Caja)
+        </h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.6rem; align-items: center;">
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--input-border);">
+            <label style="display:block; font-size:0.7rem; color:#94a3b8; font-weight:600;">FONDO ($)</label>
+            <input type="number" step="0.01" class="bill-start-initial" placeholder="0.00" style="width: 100%; margin-top: 0.1rem;">
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--input-border);">
+            <label style="display:block; font-size:0.7rem; color:#38bdf8; font-weight:600;">$500</label>
+            <input type="number" min="0" class="bill-start-input" data-denom="500" placeholder="0" style="width: 100%; text-align: center;">
+            <span id="start-sub-500" style="font-size: 0.7rem; color: #94a3b8; display: block; text-align: right;">$0</span>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--input-border);">
+            <label style="display:block; font-size:0.7rem; color:#818cf8; font-weight:600;">$200</label>
+            <input type="number" min="0" class="bill-start-input" data-denom="200" placeholder="0" style="width: 100%; text-align: center;">
+            <span id="start-sub-200" style="font-size: 0.7rem; color: #94a3b8; display: block; text-align: right;">$0</span>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--input-border);">
+            <label style="display:block; font-size:0.7rem; color:#ef4444; font-weight:600;">$100</label>
+            <input type="number" min="0" class="bill-start-input" data-denom="100" placeholder="0" style="width: 100%; text-align: center;">
+            <span id="start-sub-100" style="font-size: 0.7rem; color: #94a3b8; display: block; text-align: right;">$0</span>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--input-border);">
+            <label style="display:block; font-size:0.7rem; color:#f59e0b; font-weight:600;">$50</label>
+            <input type="number" min="0" class="bill-start-input" data-denom="50" placeholder="0" style="width: 100%; text-align: center;">
+            <span id="start-sub-50" style="font-size: 0.7rem; color: #94a3b8; display: block; text-align: right;">$0</span>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--input-border);">
+            <label style="display:block; font-size:0.7rem; color:#10b981; font-weight:600;">$20</label>
+            <input type="number" min="0" class="bill-start-input" data-denom="20" placeholder="0" style="width: 100%; text-align: center;">
+            <span id="start-sub-20" style="font-size: 0.7rem; color: #94a3b8; display: block; text-align: right;">$0</span>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--input-border);">
+            <label style="display:block; font-size:0.7rem; color:#cbd5e1; font-weight:600;">MONEDAS</label>
+            <input type="number" min="0" step="0.5" class="bill-start-coins" placeholder="0.00" style="width: 100%; text-align: center;">
+            <span id="start-sub-coins" style="font-size: 0.7rem; color: #94a3b8; display: block; text-align: right;">$0</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 0.8rem; background: rgba(56, 189, 248, 0.12); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3); text-align: center;">
+          <span style="font-size: 0.65rem; color: #94a3b8; display: block; text-transform: uppercase; font-weight: 700;">TOTAL INICIO DÍA</span>
+          <strong id="startPhysicalTotalDisplay" style="font-size: 1.1rem; color: #38bdf8;">$0.00</strong>
+        </div>
+      </div>
+
+      <!-- Fin de Dia -->
+      <div class="table-card" style="padding: 1.2rem; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(52, 211, 153, 0.3);">
+        <h3 style="font-size: 1.05rem; color: #34d399; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem;">
+          🌙 FIN DE DÍA (Cierre de Caja)
+        </h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.6rem; align-items: center;">
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--input-border);">
+            <label style="display:block; font-size:0.7rem; color:#94a3b8; font-weight:600;">FONDO ($)</label>
+            <input type="number" step="0.01" class="bill-end-initial" placeholder="0.00" style="width: 100%; margin-top: 0.1rem;">
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--input-border);">
+            <label style="display:block; font-size:0.7rem; color:#38bdf8; font-weight:600;">$500</label>
+            <input type="number" min="0" class="bill-end-input" data-denom="500" placeholder="0" style="width: 100%; text-align: center;">
+            <span id="end-sub-500" style="font-size: 0.7rem; color: #94a3b8; display: block; text-align: right;">$0</span>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--input-border);">
+            <label style="display:block; font-size:0.7rem; color:#818cf8; font-weight:600;">$200</label>
+            <input type="number" min="0" class="bill-end-input" data-denom="200" placeholder="0" style="width: 100%; text-align: center;">
+            <span id="end-sub-200" style="font-size: 0.7rem; color: #94a3b8; display: block; text-align: right;">$0</span>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--input-border);">
+            <label style="display:block; font-size:0.7rem; color:#ef4444; font-weight:600;">$100</label>
+            <input type="number" min="0" class="bill-end-input" data-denom="100" placeholder="0" style="width: 100%; text-align: center;">
+            <span id="end-sub-100" style="font-size: 0.7rem; color: #94a3b8; display: block; text-align: right;">$0</span>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--input-border);">
+            <label style="display:block; font-size:0.7rem; color:#f59e0b; font-weight:600;">$50</label>
+            <input type="number" min="0" class="bill-end-input" data-denom="50" placeholder="0" style="width: 100%; text-align: center;">
+            <span id="end-sub-50" style="font-size: 0.7rem; color: #94a3b8; display: block; text-align: right;">$0</span>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--input-border);">
+            <label style="display:block; font-size:0.7rem; color:#10b981; font-weight:600;">$20</label>
+            <input type="number" min="0" class="bill-end-input" data-denom="20" placeholder="0" style="width: 100%; text-align: center;">
+            <span id="end-sub-20" style="font-size: 0.7rem; color: #94a3b8; display: block; text-align: right;">$0</span>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--input-border);">
+            <label style="display:block; font-size:0.7rem; color:#cbd5e1; font-weight:600;">MONEDAS</label>
+            <input type="number" min="0" step="0.5" class="bill-end-coins" placeholder="0.00" style="width: 100%; text-align: center;">
+            <span id="end-sub-coins" style="font-size: 0.7rem; color: #94a3b8; display: block; text-align: right;">$0</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 0.8rem; background: rgba(52, 211, 153, 0.12); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(52, 211, 153, 0.3); text-align: center;">
+          <span style="font-size: 0.65rem; color: #94a3b8; display: block; text-transform: uppercase; font-weight: 700;">TOTAL FIN DÍA</span>
+          <strong id="endPhysicalTotalDisplay" style="font-size: 1.1rem; color: #34d399;">$0.00</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Casilla de Diferencia: Cuánto se hizo en efectivo hoy (Fin de Día - Inicio de Día) -->
+    <div style="margin-bottom: 2rem; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 10px; padding: 1rem; text-align: center; display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; display: block;">INICIO DE DÍA</span>
+        <strong id="summaryStartTotal" style="font-size: 1.2rem; color: #38bdf8;">$0.00</strong>
+      </div>
+
+      <div style="font-size: 1.5rem; color: #64748b; font-weight: bold;">➡️</div>
+
+      <div>
+        <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; display: block;">FIN DE DÍA</span>
+        <strong id="summaryEndTotal" style="font-size: 1.2rem; color: #34d399;">$0.00</strong>
+      </div>
+
+      <div style="font-size: 1.5rem; color: #64748b; font-weight: bold;">=</div>
+
+      <div style="background: rgba(245, 158, 11, 0.15); padding: 0.6rem 1.5rem; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.5);">
+        <span style="font-size: 0.75rem; color: #f59e0b; text-transform: uppercase; font-weight: 700; display: block;">💵 EFECTIVO GENERADO EN EL DÍA</span>
+        <strong id="dayCashDiffDisplay" style="font-size: 1.4rem; color: #f59e0b;">$0.00</strong>
+      </div>
+
+      <button id="transferEndToStartBtn" class="btn btn-outline" style="border-color: #38bdf8; color: #38bdf8; padding: 0.6rem 1rem;" title="Copiar todo el desglose de billetes del Cierre (Fin de Día) al Inicio de Nuevo Día y reiniciar Fin de Día">
+        🔁 Pasar Cierre a Inicio de Nuevo Día
+      </button>
+    </div>
+
+    <!-- Panel Contador de Papel (Carta u Oficio) -->
+    <div class="table-card" style="padding: 1.5rem; margin-bottom: 2rem; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(245, 158, 11, 0.3);">
+      <h3 style="font-size: 1.1rem; color: #f59e0b; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+        📦 Contador de Papel (Cajas y Paquetes Sueltos - Carta y Oficio)
+      </h3>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <!-- Seccion Tamaño Carta -->
+        <div style="background: rgba(15, 23, 42, 0.5); padding: 1rem; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.2);">
+          <h4 style="color: #f59e0b; font-size: 0.9rem; margin-bottom: 0.8rem; text-transform: uppercase; font-weight: 700;">📄 PAPEL TAMAÑO CARTA</h4>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.8rem; align-items: center;">
+            <div>
+              <label for="letterPacksInput" style="display:block; font-size:0.75rem; color:#cbd5e1; font-weight:600; margin-bottom:0.2rem;">Total Paquetes</label>
+              <input type="number" min="0" id="letterPacksInput" placeholder="0" style="width: 100%; text-align: center; font-weight: bold;">
+            </div>
+            <div style="background: rgba(245, 158, 11, 0.12); padding: 0.5rem; border-radius: 6px; text-align: center;">
+              <span style="font-size: 0.65rem; color: #94a3b8; display: block; font-weight: 700;">INVENTARIO</span>
+              <strong id="letterBoxesDisplay" style="font-size: 1rem; color: #f59e0b;">0 Cajas</strong>
+            </div>
+            <div>
+              <label for="letterConsumedPacksInput" style="display:block; font-size:0.75rem; color:#ef4444; font-weight:600; margin-bottom:0.2rem;">Paq. Consumidos</label>
+              <input type="number" min="0" id="letterConsumedPacksInput" placeholder="0" style="width: 100%; text-align: center; font-weight: bold; color: #ef4444;">
+            </div>
+            <div style="background: rgba(239, 68, 68, 0.12); padding: 0.5rem; border-radius: 6px; text-align: center;">
+              <span style="font-size: 0.65rem; color: #ef4444; display: block; font-weight: 700;">CONSUMIDO</span>
+              <strong id="letterConsumedBoxesDisplay" style="font-size: 1rem; color: #ef4444;">-</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seccion Tamaño Oficio -->
+        <div style="background: rgba(15, 23, 42, 0.5); padding: 1rem; border-radius: 8px; border: 1px solid rgba(129, 140, 248, 0.2);">
+          <h4 style="color: #818cf8; font-size: 0.9rem; margin-bottom: 0.8rem; text-transform: uppercase; font-weight: 700;">📑 PAPEL TAMAÑO OFICIO</h4>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.8rem; align-items: center;">
+            <div>
+              <label for="legalPacksInput" style="display:block; font-size:0.75rem; color:#cbd5e1; font-weight:600; margin-bottom:0.2rem;">Total Paquetes</label>
+              <input type="number" min="0" id="legalPacksInput" placeholder="0" style="width: 100%; text-align: center; font-weight: bold;">
+            </div>
+            <div style="background: rgba(129, 140, 248, 0.12); padding: 0.5rem; border-radius: 6px; text-align: center;">
+              <span style="font-size: 0.65rem; color: #94a3b8; display: block; font-weight: 700;">INVENTARIO</span>
+              <strong id="legalBoxesDisplay" style="font-size: 1rem; color: #818cf8;">0 Cajas</strong>
+            </div>
+            <div>
+              <label for="legalConsumedPacksInput" style="display:block; font-size:0.75rem; color:#ef4444; font-weight:600; margin-bottom:0.2rem;">Paq. Consumidos</label>
+              <input type="number" min="0" id="legalConsumedPacksInput" placeholder="0" style="width: 100%; text-align: center; font-weight: bold; color: #ef4444;">
+            </div>
+            <div style="background: rgba(239, 68, 68, 0.12); padding: 0.5rem; border-radius: 6px; text-align: center;">
+              <span style="font-size: 0.65rem; color: #ef4444; display: block; font-weight: 700;">CONSUMIDO</span>
+              <strong id="legalConsumedBoxesDisplay" style="font-size: 1rem; color: #ef4444;">-</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de Días Hábiles (Lunes a Sábado) -->
+    <div class="table-card" id="mainEarningsTableCard">
+      <div class="table-header">
+        <h2 id="monthTitle">Listado de Ganancias</h2>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Día / Fecha</th>
+              <th>💵 Efectivo ($)</th>
+              <th>💳 Transf. ($)</th>
+              <th>📉 Gastos ($)</th>
+              <th>💰 Total Neto ($)</th>
+              <th>Notas / Observaciones</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Filas dinámicas generadas desde app.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Configuración y Envio de WhatsApp -->
+  <div class="modal-overlay" id="whatsappModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>📲 Previsualización y Envío de Corte</h3>
+      </div>
+      <div class="modal-body">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
+          <div class="form-group">
+            <label for="phoneInput">WhatsApp (10 dígitos)</label>
+            <input type="tel" id="phoneInput" value="525520368917" placeholder="525520368917">
+          </div>
+          <div class="form-group">
+            <label for="telegramUserHost">Canal / Usuario Telegram</label>
+            <input type="text" id="telegramUserHost" placeholder="@tu_canal_o_usuario" style="width: 100%;">
+          </div>
+        </div>
+
+        <div class="form-group" id="dateSelectGroup" style="display: none;">
+          <label for="datePickerSelect" style="color: #38bdf8; font-weight: 600; display: flex; align-items: center; gap: 0.4rem;">
+            📅 Cambiar / Elegir Día de Corte:
+          </label>
+          <input type="date" id="datePickerSelect" style="width: 100%; background: #0f172a; border: 1px solid #38bdf8; color: #fff; padding: 0.5rem; border-radius: 6px; font-family: inherit; font-size: 0.95rem; cursor: pointer;">
+        </div>
+
+        <div class="form-group" id="weekSelectGroup" style="display: none;">
+          <label for="weekSelect">Seleccionar Semana del Mes</label>
+          <select id="weekSelect" style="width: 100%;">
+            <!-- Opciones de semanas generadas dinámicamente -->
+          </select>
+        </div>
+
+        <p>Vista previa del mensaje:</p>
+        <div class="whatsapp-preview-box" id="whatsappPreview"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelModalBtn" class="btn btn-outline">Cancelar</button>
+        <button id="sendWhatsAppModalBtn" class="btn btn-whatsapp">Abrir WhatsApp 📲</button>
+        <button id="sendTelegramModalBtn" class="btn btn-outline" style="border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.15);" title="Compartir este corte por Telegram">
+          Abrir Telegram ✈️
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Sondeo Anual -->
+  <div class="modal-overlay" id="annualModal">
+    <div class="modal" style="max-width: 550px;">
+      <div class="modal-header">
+        <h3 id="annualModalTitle">🔍 Sondeo Acumulado del Año</h3>
+      </div>
+      <div class="modal-body">
+        <div class="stat-card" style="margin-bottom: 1rem; background: rgba(56, 189, 248, 0.1);">
+          <div class="stat-title">Gran Total Acumulado Anual (Neto)</div>
+          <div class="stat-value" id="annualGrandTotal" style="color: #38bdf8; font-size: 2.2rem;">$0.00</div>
+          <div class="stat-subtext">Suma de las ganancias de los 12 meses</div>
+        </div>
+
+        <div style="max-height: 250px; overflow-y: auto; background: #0f172a; border-radius: 8px; padding: 0.8rem;">
+          <table style="width: 100%; font-size: 0.9rem;">
+            <thead>
+              <tr style="border-bottom: 1px solid #334155;">
+                <th style="padding: 0.5rem; text-align: left;">Mes</th>
+                <th style="padding: 0.5rem; text-align: right;">Total Neto ($)</th>
+              </tr>
+            </thead>
+            <tbody id="annualBreakdownBody">
+              <!-- Desglose por mes -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="closeAnnualModalBtn" class="btn btn-primary">Cerrar Sondeo</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

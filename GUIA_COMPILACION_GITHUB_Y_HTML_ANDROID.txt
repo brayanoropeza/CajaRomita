@@ -1,0 +1,187 @@
+================================================================================
+  GUÍA DEFINITIVA: COMPILACIÓN EN GITHUB ACTIONS Y PORT DE HTML A APP ANDROID
+  Creado para: Brayan Jesús Oropeza Acuña
+================================================================================
+
+--------------------------------------------------------------------------------
+PARTE 1: PLANTILLA COMPROBADA DE GITHUB ACTIONS (.github/workflows/build_apk.yml)
+--------------------------------------------------------------------------------
+Crea este archivo en tu repositorio de GitHub en la ruta:
+.github/workflows/build_apk.yml
+
+Contenido del archivo YAML:
+
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK 35
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-35 build-tools;35.0.0'
+
+      - name: Generate Gradle Wrapper
+        run: gradle wrapper --gradle-version 8.10.2
+
+      - name: Make Gradlew Executable
+        run: chmod +x gradlew
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiApp-Debug-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+--------------------------------------------------------------------------------
+ARCHIVOS OBLIGATORIOS EN LA RAÍZ DEL PROYECTO PARA QUE GITHUB NO FALLE
+--------------------------------------------------------------------------------
+
+1. gradle.properties (En la raíz del proyecto):
+android.useAndroidX=true
+android.enableJetifier=true
+android.nonTransitiveRClass=true
+org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+kotlin.code.style=official
+
+2. settings.gradle.kts (En la raíz del proyecto):
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+rootProject.name = "NombreDeTuApp"
+include(":app")
+
+3. build.gradle.kts (En la raíz del proyecto):
+plugins {
+    id("com.android.application") version "8.7.2" apply false
+    id("org.jetbrains.kotlin.android") version "2.0.21" apply false
+}
+
+================================================================================
+PARTE 2: CÓMO PORTAR UN ARCHIVO HTML A APP ANDROID Y COMUNICAR JS CON KOTLIN
+================================================================================
+
+Para meter tu archivo HTML/CSS/JS dentro de la app Android y hacer que se comunique
+con las funciones del teléfono (sensores, alertas, almacenamiento, etc.):
+
+1. Ubicación del archivo HTML:
+Coloca tu index.html dentro de: app/src/main/assets/index.html
+
+2. Código Kotlin en tu MainActivity.kt para cargar el HTML y comunicar JS con Android:
+
+```kotlin
+package com.example.myapp
+
+import android.os.Bundle
+import android.webkit.JavascriptInterface
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+
+class MainActivity : ComponentActivity() {
+
+    private lateinit var webView: WebView
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        webView = WebView(this).apply {
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
+            webViewClient = WebViewClient()
+
+            // Conectar JavaScript de tu HTML con la clase AndroidBridge
+            addJavascriptInterface(AndroidBridge(this@MainActivity), "AndroidInterface")
+
+            // Cargar tu archivo HTML local
+            loadUrl("file:///android_asset/index.html")
+        }
+
+        setContentView(webView)
+    }
+
+    // Clase Puente para recibir llamadas desde tu HTML
+    inner class AndroidBridge(private val context: MainActivity) {
+
+        // Esta función se puede llamar directamente desde JavaScript en tu HTML
+        @JavascriptInterface
+        fun mostrarMensajeDesdeHTML(mensaje: String) {
+            runOnUiThread {
+                Toast.makeText(context, "Mensaje recibido del HTML: $mensaje", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        // Función para enviar datos de vuelta desde Kotlin hacia JavaScript en el HTML
+        @JavascriptInterface
+        fun solicitarDatosAndroid(): String {
+            return "Respuesta desde Kotlin Android Nativo"
+        }
+    }
+}
+```
+
+3. Código JavaScript dentro de tu archivo HTML (index.html):
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi App Web a Android</title>
+</head>
+<body>
+    <h1>Mi App HTML portada a Android</h1>
+    <button onclick="enviarMensajeAAndroid()">Enviar mensaje a Android</button>
+
+    <script>
+        function enviarMensajeAAndroid() {
+            // Comprobar si estamos dentro de la app Android
+            if (window.AndroidInterface) {
+                // Llamada a la función de Kotlin
+                window.AndroidInterface.mostrarMensajeDesdeHTML("¡Hola desde el HTML!");
+            } else {
+                alert("Estás navegando desde la web normal");
+            }
+        }
+    </script>
+</body>
+</html>
+```
+
+================================================================================
+¡Listo! Con estos archivos puedes convertir cualquier web en HTML a APK nativo 
+y compilarlo en la nube con GitHub Actions.
+================================================================================
