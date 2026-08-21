@@ -134,15 +134,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     db = firebase.database();
 
+    // Migrar automáticamente datos guardados previamente en esta PC a Firebase
+    const localKeys = Object.keys(localStorage);
+    localKeys.forEach(k => {
+      if (k.startsWith('ganancias_v2_') || k.startsWith('papel_') || k.startsWith('bill_')) {
+        try {
+          const val = JSON.parse(localStorage.getItem(k));
+          db.ref(`ganancias/${k}`).set(val);
+        } catch(e) {
+          const val = localStorage.getItem(k);
+          db.ref(`ganancias/${k}`).set(val);
+        }
+      }
+    });
+
     // Escuchar cambios globales en tiempo real desde cualquier dispositivo (PC / Celular)
     db.ref("ganancias").on("value", (snapshot) => {
       const allData = snapshot.val();
       if (allData) {
         Object.keys(allData).forEach(key => {
-          localStorage.setItem(key, JSON.stringify(allData[key]));
+          const itemVal = allData[key];
+          if (typeof itemVal === 'object') {
+            localStorage.setItem(key, JSON.stringify(itemVal));
+          } else {
+            localStorage.setItem(key, itemVal);
+          }
         });
         if (typeof renderTable === 'function') {
           renderTable();
+        }
+        if (typeof restorePaperInput === 'function') {
+          restorePaperInput();
+        }
+        if (typeof restoreBillInputs === 'function') {
+          restoreBillInputs();
         }
       }
     });
