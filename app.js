@@ -160,13 +160,20 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem(key, itemVal);
           }
         });
-        if (typeof renderTable === 'function') {
+        
+        // Evitar reconstruir el HTML si el usuario está escribiendo activamente en una casilla
+        const isEditing = document.activeElement && (
+          document.activeElement.classList.contains('amount-input') || 
+          document.activeElement.classList.contains('note-input')
+        );
+
+        if (!isEditing && typeof renderTable === 'function') {
           renderTable();
         }
-        if (typeof restorePaperInput === 'function') {
+        if (!isEditing && typeof restorePaperInput === 'function') {
           restorePaperInput();
         }
-        if (typeof restoreBillInputs === 'function') {
+        if (!isEditing && typeof restoreBillInputs === 'function') {
           restoreBillInputs();
         }
       }

@@ -591,29 +591,56 @@ tr.week-subtotal-row td {
     padding: 0.6rem 0.4rem;
   }
 
-  /* Ancho y diseño nítido para las columnas donde se registra dinero */
+  /* Ancho y diseño nítido para las columnas donde se registra dinero en celular */
+  th:nth-child(1), td:nth-child(1) {
+    min-width: 90px;
+    width: 90px;
+  }
+
   th:nth-child(2), td:nth-child(2),
   th:nth-child(3), td:nth-child(3),
   th:nth-child(4), td:nth-child(4) {
-    min-width: 110px;
-    width: 110px;
+    min-width: 120px;
+    width: 120px;
   }
 
   th:nth-child(5), td:nth-child(5) {
-    min-width: 115px;
+    min-width: 125px;
+    width: 125px;
+  }
+
+  th:nth-child(6), td:nth-child(6) {
+    min-width: 180px;
   }
 
   input.amount-input {
     font-size: 1rem !important;
-    padding: 0.6rem 0.4rem !important;
+    padding: 0.6rem 0.5rem !important;
     text-align: right;
     font-weight: 600;
-    min-height: 42px;
+    min-height: 44px;
+    border-radius: 6px;
+  }
+
+  input.field-cash {
+    border-color: rgba(56, 189, 248, 0.4);
+    background: rgba(15, 23, 42, 0.6);
+  }
+
+  input.field-transfer {
+    border-color: rgba(129, 140, 248, 0.4);
+    background: rgba(15, 23, 42, 0.6);
+  }
+
+  input.field-expense {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(15, 23, 42, 0.6);
   }
 
   input.note-input {
-    font-size: 0.9rem;
-    padding: 0.5rem;
+    font-size: 0.85rem;
+    padding: 0.6rem;
+    min-height: 44px;
   }
 
   .modal-content {
