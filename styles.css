@@ -542,7 +542,7 @@ tr.week-subtotal-row td {
 }
 
 /* --- VISTA DE TARJETAS VERTICALES NATIVAS PARA CELULARES Y APK ANDROID --- */
-@media screen and (max-width: 992px) {
+@media screen and (max-width: 1200px) {
   /* Contenedores sin desbordamiento */
   .container, .table-card, .table-wrapper {
     width: 100% !important;
@@ -552,23 +552,23 @@ tr.week-subtotal-row td {
   }
 
   /* Ocultar tabla rígida y convertir cada día en tarjeta vertical */
-  .mobile-cards-table, 
-  .mobile-cards-table thead, 
-  .mobile-cards-table tbody, 
-  .mobile-cards-table th, 
-  .mobile-cards-table td, 
-  .mobile-cards-table tr {
+  table, 
+  table thead, 
+  table tbody, 
+  table th, 
+  table td, 
+  table tr {
     display: block !important;
     width: 100% !important;
     min-width: 100% !important;
     box-sizing: border-box !important;
   }
 
-  .mobile-cards-table thead {
+  table thead {
     display: none !important; /* Ocultar encabezados horizontales */
   }
 
-  .mobile-cards-table tbody tr:not(.week-subtotal-row) {
+  table tbody tr:not(.week-subtotal-row) {
     background: rgba(30, 41, 59, 0.95) !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
     border-radius: 14px !important;
@@ -577,12 +577,12 @@ tr.week-subtotal-row td {
     box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
   }
 
-  .mobile-cards-table tbody tr.today-row {
+  table tbody tr.today-row {
     border: 2px solid #38bdf8 !important;
     background: rgba(15, 23, 42, 0.98) !important;
   }
 
-  .mobile-cards-table tbody td {
+  table tbody td {
     display: flex !important;
     flex-direction: row !important;
     justify-content: space-between !important;
@@ -593,12 +593,12 @@ tr.week-subtotal-row td {
     width: 100% !important;
   }
 
-  .mobile-cards-table tbody td:last-child {
+  table tbody td:last-child {
     border-bottom: none !important;
   }
 
   /* Etiquetas automáticas a la izquierda en celular */
-  .mobile-cards-table tbody td:nth-child(1) { 
+  table tbody td:nth-child(1) { 
     font-size: 1.1rem !important; 
     font-weight: 700 !important; 
     color: #f8fafc !important; 
@@ -607,15 +607,15 @@ tr.week-subtotal-row td {
     margin-bottom: 0.4rem !important; 
   }
 
-  .mobile-cards-table tbody td:nth-child(2)::before { content: "💵 Efectivo:"; color: #38bdf8; font-weight: 600; font-size: 0.9rem; }
-  .mobile-cards-table tbody td:nth-child(3)::before { content: "💳 Transferencia:"; color: #818cf8; font-weight: 600; font-size: 0.9rem; }
-  .mobile-cards-table tbody td:nth-child(4)::before { content: "📉 Gastos:"; color: #ef4444; font-weight: 600; font-size: 0.9rem; }
-  .mobile-cards-table tbody td:nth-child(5)::before { content: "💰 Total Neto:"; color: #10b981; font-weight: 700; font-size: 0.9rem; }
-  .mobile-cards-table tbody td:nth-child(6)::before { content: "📝 Notas:"; color: #94a3b8; font-weight: 600; font-size: 0.9rem; }
-  .mobile-cards-table tbody td:nth-child(7)::before { content: "📲 Enviar:"; color: #cbd5e1; font-weight: 600; font-size: 0.9rem; }
+  table tbody td:nth-child(2)::before { content: "💵 Efectivo:"; color: #38bdf8; font-weight: 600; font-size: 0.9rem; }
+  table tbody td:nth-child(3)::before { content: "💳 Transferencia:"; color: #818cf8; font-weight: 600; font-size: 0.9rem; }
+  table tbody td:nth-child(4)::before { content: "📉 Gastos:"; color: #ef4444; font-weight: 600; font-size: 0.9rem; }
+  table tbody td:nth-child(5)::before { content: "💰 Total Neto:"; color: #10b981; font-weight: 700; font-size: 0.9rem; }
+  table tbody td:nth-child(6)::before { content: "📝 Notas:"; color: #94a3b8; font-weight: 600; font-size: 0.9rem; }
+  table tbody td:nth-child(7)::before { content: "📲 Enviar:"; color: #cbd5e1; font-weight: 600; font-size: 0.9rem; }
 
-  .mobile-cards-table input.amount-input, 
-  .mobile-cards-table input.note-input {
+  table input.amount-input, 
+  table input.note-input {
     width: 55% !important;
     max-width: 180px !important;
     font-size: 1rem !important;
@@ -628,12 +628,12 @@ tr.week-subtotal-row td {
     color: #fff !important;
   }
 
-  .mobile-cards-table .net-display {
+  table .net-display {
     font-size: 1.15rem !important;
   }
 
   /* Subtotal de Semana tipo tarjeta destacada en celular */
-  .mobile-cards-table tr.week-subtotal-row {
+  table tr.week-subtotal-row {
     background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(129, 140, 248, 0.25) 100%) !important;
     border: 1px solid rgba(56, 189, 248, 0.5) !important;
     border-radius: 12px !important;
@@ -641,7 +641,7 @@ tr.week-subtotal-row td {
     margin-bottom: 1.5rem !important;
   }
 
-  .mobile-cards-table tr.week-subtotal-row td {
+  table tr.week-subtotal-row td {
     border-bottom: 1px solid rgba(255,255,255,0.15) !important;
   }
 }
