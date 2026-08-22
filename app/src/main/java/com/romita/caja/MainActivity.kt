@@ -24,7 +24,13 @@ class MainActivity : ComponentActivity() {
             settings.builtInZoomControls = true
             settings.displayZoomControls = false
             settings.setSupportZoom(true)
-            webViewClient = WebViewClient()
+            settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            settings.databaseEnabled = true
+            webViewClient = object : WebViewClient() {
+                override fun onReceivedSslError(view: WebView?, handler: android.webkit.SslErrorHandler?, error: android.net.http.SslError?) {
+                    handler?.proceed()
+                }
+            }
 
             addJavascriptInterface(AndroidBridge(this@MainActivity), "AndroidInterface")
 
