@@ -19,8 +19,8 @@ class MainActivity : ComponentActivity() {
             settings.domStorageEnabled = true
             settings.allowFileAccess = true
             settings.allowContentAccess = true
-            settings.useWideViewPort = true
-            settings.loadWithOverviewMode = true
+            settings.useWideViewPort = false
+            settings.loadWithOverviewMode = false
             settings.builtInZoomControls = true
             settings.displayZoomControls = false
             settings.setSupportZoom(true)
