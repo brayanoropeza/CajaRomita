@@ -541,10 +541,10 @@ tr.week-subtotal-row td {
   }
 }
 
-/* --- ADAPTACIÓN RESPONSIVA Y OPTIMIZACIÓN PARA TELÉFONOS MOVILES (APK ANDROID) --- */
+/* --- ADAPTACIÓN RESPONSIVA DEFINITIVA PARA TELÉFONOS MOVILES (APK ANDROID) --- */
 @media (max-width: 768px) {
   body {
-    padding: 0.8rem 0.5rem;
+    padding: 0.5rem 0.3rem;
   }
 
   header {
@@ -557,90 +557,111 @@ tr.week-subtotal-row td {
   .controls-bar {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.6rem;
+    gap: 0.5rem;
   }
 
   .controls-bar button, .controls-bar select {
     width: 100%;
-    font-size: 0.85rem;
-    padding: 0.6rem;
+    font-size: 0.8rem;
+    padding: 0.6rem 0.3rem;
   }
 
   .stats-grid {
     grid-template-columns: 1fr;
-    gap: 0.8rem;
+    gap: 0.6rem;
   }
 
   .stat-card {
-    padding: 1rem;
+    padding: 0.8rem;
   }
 
   .table-card {
-    padding: 0.8rem 0.5rem;
+    padding: 0.5rem 0.3rem;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .table-header {
+    padding: 0.8rem;
+    margin-bottom: 0.8rem;
+    background: rgba(30, 41, 59, 0.9);
     border-radius: 8px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
   }
 
-  table {
-    min-width: 750px;
-    font-size: 0.9rem;
+  /* Transformar la tabla de días en tarjetas verticales limpias en pantallas táctiles de celular */
+  table, thead, tbody, th, td, tr {
+    display: block;
+    width: 100% !important;
+    min-width: 100% !important;
   }
 
-  th, td {
-    padding: 0.6rem 0.4rem;
+  thead {
+    display: none; /* Ocultar los encabezados horizontales de tabla */
   }
 
-  /* Ancho y diseño nítido para las columnas donde se registra dinero en celular */
-  th:nth-child(1), td:nth-child(1) {
-    min-width: 90px;
-    width: 90px;
+  tbody tr:not(.week-subtotal-row) {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0.8rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
   }
 
-  th:nth-child(2), td:nth-child(2),
-  th:nth-child(3), td:nth-child(3),
-  th:nth-child(4), td:nth-child(4) {
-    min-width: 120px;
-    width: 120px;
+  tbody tr.today-row {
+    border: 2px solid #38bdf8;
+    background: rgba(15, 23, 42, 0.95);
   }
 
-  th:nth-child(5), td:nth-child(5) {
-    min-width: 125px;
-    width: 125px;
+  tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0 !important;
+    border: none !important;
+    border-bottom: 1px dashed rgba(255,255,255,0.08) !important;
+    min-width: 100% !important;
+    width: 100% !important;
   }
 
-  th:nth-child(6), td:nth-child(6) {
-    min-width: 180px;
+  tbody td:last-child {
+    border-bottom: none !important;
   }
 
-  input.amount-input {
-    font-size: 1rem !important;
-    padding: 0.6rem 0.5rem !important;
+  /* Etiquetas descriptivas al lado de cada casilla en celular */
+  tbody td:nth-child(2)::before { content: "💵 Efectivo:"; color: #38bdf8; font-weight: 600; font-size: 0.85rem; }
+  tbody td:nth-child(3)::before { content: "💳 Transferencia:"; color: #818cf8; font-weight: 600; font-size: 0.85rem; }
+  tbody td:nth-child(4)::before { content: "📉 Gastos:"; color: #ef4444; font-weight: 600; font-size: 0.85rem; }
+  tbody td:nth-child(5)::before { content: "💰 Total Neto:"; color: #10b981; font-weight: 700; font-size: 0.85rem; }
+  tbody td:nth-child(6)::before { content: "📝 Notas:"; color: #94a3b8; font-weight: 600; font-size: 0.85rem; }
+  tbody td:nth-child(7)::before { content: "📲 Enviar:"; color: #cbd5e1; font-weight: 600; font-size: 0.85rem; }
+
+  input.amount-input, input.note-input {
+    width: 55% !important;
+    max-width: 180px !important;
+    font-size: 0.95rem !important;
+    padding: 0.5rem 0.6rem !important;
     text-align: right;
-    font-weight: 600;
-    min-height: 44px;
+    min-height: 40px;
     border-radius: 6px;
   }
 
-  input.field-cash {
-    border-color: rgba(56, 189, 248, 0.4);
-    background: rgba(15, 23, 42, 0.6);
+  .net-display {
+    font-size: 1.1rem !important;
   }
 
-  input.field-transfer {
-    border-color: rgba(129, 140, 248, 0.4);
-    background: rgba(15, 23, 42, 0.6);
+  /* Fila de Subtotal de Semana en Celular */
+  tr.week-subtotal-row {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(129, 140, 248, 0.2) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 10px;
+    padding: 0.8rem;
+    margin-bottom: 1.2rem;
   }
 
-  input.field-expense {
-    border-color: rgba(239, 68, 68, 0.4);
-    background: rgba(15, 23, 42, 0.6);
-  }
-
-  input.note-input {
-    font-size: 0.85rem;
-    padding: 0.6rem;
-    min-height: 44px;
+  tr.week-subtotal-row td {
+    border-bottom: 1px solid rgba(255,255,255,0.1) !important;
   }
 
   .modal-content {
